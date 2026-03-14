@@ -175,6 +175,20 @@
             return b.filter(x => x === 1).length;
         }
 
+        function toggleEffect(r, c) {
+            const coords = [
+                [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
+                [r, c - 1], [r, c], [r, c + 1],
+                [r + 1, c - 1], [r + 1, c], [r + 1, c + 1]
+            ];
+
+            coords.forEach(([nr, nc]) => {
+                if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                    grid[nr][nc] = 1 - grid[nr][nc];
+                }
+            });
+        }
+
         function initBoard() {
             let movesNeeded = 0;
             let attempts = 0;
