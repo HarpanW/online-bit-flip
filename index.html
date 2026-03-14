@@ -1,4 +1,3 @@
-abc
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,7 +14,7 @@ abc
             height: 100vh;
             margin: 0;
             background-color: #e0e0e0;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             touch-action: manipulation;
         }
 
@@ -56,22 +55,60 @@ abc
             background-color: #111111;
         }
 
-        #reset {
-            margin-top: 30px;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            color: white;
-            background-color: #333;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
         }
 
-        #reset:active {
-            background-color: #555;
-            transform: translateY(2px);
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: #111;
+            font-size: 2rem;
+        }
+
+        .play-again-btn {
+            background: #111;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .play-again-btn:hover {
+            background: #444;
         }
     </style>
 </head>
@@ -82,10 +119,17 @@ abc
     <p>Tap a square to invert it and all <b>8 neighbors</b>.<br>Turn the whole grid <b>black</b> to win!</p>
 
     <div id="grid"></div>
-    <button id="reset">Reset Game</button>
+
+    <div id="win-modal">
+        <div class="modal-content">
+            <h2>You Won!</h2>
+            <button class="play-again-btn" onclick="closeWinModal()">Play Again</button>
+        </div>
+    </div>
 
     <script>
         const gridElement = document.getElementById('grid');
+        const winModal = document.getElementById('win-modal');
         let grid = [];
         const size = 4;
 
@@ -101,7 +145,6 @@ abc
             if (grid.every(row => row.every(cell => cell === 1))) {
                 toggle(0, 0, false);
             }
-
             render();
         }
 
@@ -120,7 +163,7 @@ abc
 
             if (checkWinFlag) {
                 render();
-                setTimeout(checkWin, 50);
+                setTimeout(checkWin, 100);
             }
         }
 
@@ -139,12 +182,14 @@ abc
         function checkWin() {
             const isWin = grid.every(row => row.every(cell => cell === 1));
             if (isWin) {
-                alert('YOU WIN');
-                initBoard();
+                winModal.style.display = 'flex';
             }
         }
 
-        document.getElementById('reset').onclick = initBoard;
+        function closeWinModal() {
+            winModal.style.display = 'none';
+            initBoard();
+        }
 
         initBoard();
     </script>
