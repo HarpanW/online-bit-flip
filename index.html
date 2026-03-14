@@ -133,18 +133,65 @@
         let grid = [];
         const size = 4;
 
+        // --- MATH ENGINE (Jacobian / Solver) ---
+
+        function getMovesToSolve(currentGrid) {
+            const n = 16;
+            // target is to flip everything to 1
+            // we calculate which bits CURRENTLY need flipping
+            let b = [];
+            for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) b.push(currentGrid[r][c] === 0 ? 1 : 0);
+
+            // build Jacobian Matrix for 3x3 flip
+            let A = Array.from({ length: n }, () => new Uint8Array(n));
+            for (let c = 0; c < 4; c++) {
+                for (let r = 0; r < 4; r++) {
+                    let j = r * 4 + c;
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            let nr = r + dr, nc = c + dc;
+                            if (nr >= 0 && nr < 4 && nc >= 0 && nc < 4) {
+                                A[nr * 4 + nc][j] = 1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // gaussian elimination over GF(2)
+            for (let i = 0; i < n; i++) {
+                let pivot = i;
+                while (pivot < n && A[pivot][i] === 0) pivot++;
+                if (pivot === n) continue;
+                [A[i], A[pivot]] = [A[pivot], A[i]];
+                [b[i], b[pivot]] = [b[pivot], b[i]];
+                for (let j = 0; j < n; j++) {
+                    if (i !== j && A[j][i] === 1) {
+                        for (let k = i; k < n; k++) A[j][k] ^= A[i][k];
+                        b[j] ^= b[i];
+                    }
+                }
+            }
+            return b.filter(x => x === 1).length;
+        }
+
         function initBoard() {
-            grid = Array(size).fill(0).map(() => Array(size).fill(1));
+            let movesNeeded = 0;
+            let attempts = 0;
 
-            for (let i = 0; i < 15; i++) {
-                let r = Math.floor(Math.random() * size);
-                let c = Math.floor(Math.random() * size);
-                toggle(r, c, false);
-            }
+            do {
+                grid = Array(size).fill(0).map(() => Array(size).fill(1));
+                for (let i = 0; i < 10; i++) {
+                    let r = Math.floor(Math.random() * size);
+                    let c = Math.floor(Math.random() * size);
+                    toggleEffect(r, c);
+                }
 
-            if (grid.every(row => row.every(cell => cell === 1))) {
-                toggle(0, 0, false);
-            }
+                movesNeeded = getMovesToSolve(grid);
+                attempts++;
+            } while (movesNeeded < 4 && attempts < 100);
+
+            console.log(`generated in ${attempts} attempts. min moves: ${movesNeeded}`);
             render();
         }
 
