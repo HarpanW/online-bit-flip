@@ -1,0 +1,153 @@
+abc
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blackout Grid - 8 Neighbors</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #e0e0e0;
+            font-family: sans-serif;
+            touch-action: manipulation;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        p {
+            margin-bottom: 30px;
+            text-align: center;
+            color: #555;
+            padding: 0 20px;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background-color: #888;
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .cell {
+            width: 18vw;
+            height: 18vw;
+            max-width: 75px;
+            max-height: 75px;
+            background-color: #ffffff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .cell.black {
+            background-color: #111111;
+        }
+
+        #reset {
+            margin-top: 30px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #333;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #reset:active {
+            background-color: #555;
+            transform: translateY(2px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>ONLINE BIT FLIP</h1>
+    <p>Tap a square to invert it and all <b>8 neighbors</b>.<br>Turn the whole grid <b>black</b> to win!</p>
+
+    <div id="grid"></div>
+    <button id="reset">Reset Game</button>
+
+    <script>
+        const gridElement = document.getElementById('grid');
+        let grid = [];
+        const size = 4;
+
+        function initBoard() {
+            grid = Array(size).fill(0).map(() => Array(size).fill(1));
+
+            for (let i = 0; i < 15; i++) {
+                let r = Math.floor(Math.random() * size);
+                let c = Math.floor(Math.random() * size);
+                toggle(r, c, false);
+            }
+
+            if (grid.every(row => row.every(cell => cell === 1))) {
+                toggle(0, 0, false);
+            }
+
+            render();
+        }
+
+        function toggle(r, c, checkWinFlag = true) {
+            const coords = [
+                [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
+                [r, c - 1], [r, c], [r, c + 1],
+                [r + 1, c - 1], [r + 1, c], [r + 1, c + 1]
+            ];
+
+            coords.forEach(([nr, nc]) => {
+                if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                    grid[nr][nc] = 1 - grid[nr][nc];
+                }
+            });
+
+            if (checkWinFlag) {
+                render();
+                setTimeout(checkWin, 50);
+            }
+        }
+
+        function render() {
+            gridElement.innerHTML = '';
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell ' + (grid[r][c] === 1 ? 'black' : '');
+                    cell.onclick = () => toggle(r, c);
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function checkWin() {
+            const isWin = grid.every(row => row.every(cell => cell === 1));
+            if (isWin) {
+                alert('YOU WIN');
+                initBoard();
+            }
+        }
+
+        document.getElementById('reset').onclick = initBoard;
+
+        initBoard();
+    </script>
+</body>
+
+</html>
