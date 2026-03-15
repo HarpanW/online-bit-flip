@@ -16,6 +16,7 @@
             background-color: #e0e0e0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             touch-action: manipulation;
+            overflow: hidden;
         }
 
         h1 {
@@ -23,11 +24,12 @@
             color: #333;
         }
 
-        p {
-            margin-bottom: 30px;
+        .instructions {
+            margin-bottom: 20px;
             text-align: center;
             color: #555;
             padding: 0 20px;
+            font-size: 0.9rem;
         }
 
         #grid {
@@ -55,7 +57,7 @@
             background-color: #111111;
         }
 
-        #win-modal {
+        .modal {
             display: none;
             position: fixed;
             top: 0;
@@ -76,27 +78,17 @@
             text-align: center;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 80%;
         }
 
         @keyframes popIn {
-            from {
-                transform: scale(0.8);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
-        .modal-content h2 {
-            margin-top: 0;
-            color: #111;
-            font-size: 2rem;
-        }
-
-        .play-again-btn {
+        .modal h2 { margin-top: 0; color: #111; font-size: 2rem; }
+        
+        .btn {
             background: #111;
             color: white;
             border: none;
@@ -105,10 +97,29 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            transition: transform 0.1s;
         }
 
-        .play-again-btn:hover {
-            background: #444;
+        .btn:active { transform: scale(0.95); }
+
+        .stats-bar {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            background: #d0d0d0;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            color: #444;
+            font-weight: bold;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .stat-item span {
+            color: #000;
+            display: block;
+            text-align: center;
+            font-size: 1.1rem;
         }
     </style>
 </head>
@@ -116,22 +127,72 @@
 <body>
 
     <h1>ONLINE BIT FLIP</h1>
-    <p>Tap a square to invert it and all <b>8 neighbors</b>.<br>Turn the whole grid <b>black</b> to win!</p>
+    <p class="instructions">Tap a square to invert it and all <b>8 neighbors</b>.<br>Turn the whole grid <b>black</b> to win!</p>
 
     <div id="grid"></div>
 
-    <div id="win-modal">
+    <div class="stats-bar">
+        <div class="stat-item">TIME<span id="timer">0.0s</span></div>
+        <div class="stat-item">WINS<span id="win-count">0</span></div>
+        <div class="stat-item">AVG<span id="avg-time">0.0s</span></div>
+    </div>
+
+    <div id="start-modal" class="modal" style="display: flex;">
         <div class="modal-content">
-            <h2>YOU WIN</h2>
-            <button class="play-again-btn" onclick="closeWinModal()">Play Again</button>
+            <h2>READY?</h2>
+            <p>Clear the grid as fast as possible.</p>
+            <button class="btn" onclick="startGame()">START GAME</button>
+        </div>
+    </div>
+
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2>YOU WIN!</h2>
+            <p id="win-message"></p>
+            <button class="btn" onclick="startGame()">PLAY AGAIN</button>
         </div>
     </div>
 
     <script>
         const gridElement = document.getElementById('grid');
         const winModal = document.getElementById('win-modal');
+        const startModal = document.getElementById('start-modal');
+        
+        const timerDisplay = document.getElementById('timer');
+        const winCountDisplay = document.getElementById('win-count');
+        const avgTimeDisplay = document.getElementById('avg-time');
+        const winMessage = document.getElementById('win-message');
+
         let grid = [];
         const size = 4;
+
+        let startTime;
+        let timerInterval;
+        let totalWins = 0;
+        let totalTimeAccumulated = 0;
+        let gameActive = false;
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / 1000;
+                timerDisplay.innerText = elapsed.toFixed(1) + 's';
+            }, 100);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            return (Date.now() - startTime) / 1000;
+        }
+
+        function startGame() {
+            startModal.style.display = 'none';
+            winModal.style.display = 'none';
+            gameActive = true;
+            initBoard();
+            startTimer();
+        }
 
         // --- MATH ENGINE (Jacobian / Solver) ---
 
@@ -175,13 +236,13 @@
             return b.filter(x => x === 1).length;
         }
 
+
         function toggleEffect(r, c) {
             const coords = [
                 [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
                 [r, c - 1], [r, c], [r, c + 1],
                 [r + 1, c - 1], [r + 1, c], [r + 1, c + 1]
             ];
-
             coords.forEach(([nr, nc]) => {
                 if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
                     grid[nr][nc] = 1 - grid[nr][nc];
@@ -192,7 +253,6 @@
         function initBoard() {
             let movesNeeded = 0;
             let attempts = 0;
-
             do {
                 grid = Array(size).fill(0).map(() => Array(size).fill(1));
                 for (let i = 0; i < 10; i++) {
@@ -200,32 +260,17 @@
                     let c = Math.floor(Math.random() * size);
                     toggleEffect(r, c);
                 }
-
                 movesNeeded = getMovesToSolve(grid);
                 attempts++;
-            } while (movesNeeded < 4 && attempts < 100);
-
-            console.log(`generated in ${attempts} attempts. min moves: ${movesNeeded}`);
+            } while (movesNeeded < 5 && attempts < 100);
             render();
         }
 
-        function toggle(r, c, checkWinFlag = true) {
-            const coords = [
-                [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
-                [r, c - 1], [r, c], [r, c + 1],
-                [r + 1, c - 1], [r + 1, c], [r + 1, c + 1]
-            ];
-
-            coords.forEach(([nr, nc]) => {
-                if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-                    grid[nr][nc] = 1 - grid[nr][nc];
-                }
-            });
-
-            if (checkWinFlag) {
-                render();
-                setTimeout(checkWin, 100);
-            }
+        function toggle(r, c) {
+            if (!gameActive) return;
+            toggleEffect(r, c);
+            render();
+            setTimeout(checkWin, 50);
         }
 
         function render() {
@@ -242,14 +287,20 @@
 
         function checkWin() {
             const isWin = grid.every(row => row.every(cell => cell === 1));
-            if (isWin) {
+            if (isWin && gameActive) {
+                gameActive = false;
+                const finalTime = stopTimer();
+                
+                totalWins++;
+                totalTimeAccumulated += finalTime;
+                const avgTime = totalTimeAccumulated / totalWins;
+
+                winCountDisplay.innerText = totalWins;
+                avgTimeDisplay.innerText = avgTime.toFixed(1) + 's';
+                winMessage.innerText = `Finished in ${finalTime.toFixed(2)} seconds!`;
+                
                 winModal.style.display = 'flex';
             }
-        }
-
-        function closeWinModal() {
-            winModal.style.display = 'none';
-            initBoard();
         }
 
         initBoard();
