@@ -16,8 +16,10 @@
             margin: 0;
             background-color: #e0e0e0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: manipulation;
+            touch-action: none;
             overflow: hidden;
+            position: fixed;
+            width: 100%;
         }
 
         h1 {
@@ -56,9 +58,10 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.15s ease;
+            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .cell.black {
@@ -201,6 +204,21 @@
         if (personalBest) {
             pbDisplay.innerText = personalBest.toFixed(2) + 's';
         }
+
+        gridElement.addEventListener('touchstart', function (e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - (window.lastTap || 0) < 300) {
+                event.preventDefault();
+            }
+            window.lastTap = now;
+        }, { passive: false });
+
 
         function startTimer() {
             clearInterval(timerInterval);
