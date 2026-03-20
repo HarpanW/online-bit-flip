@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, touch-action=manipulation">
-    <title>ONLINE BIT FLIP</title>
+    <title>Online Bit Flip</title>
     <style>
         body {
             display: flex;
@@ -146,15 +146,55 @@
             text-align: center;
             font-size: 1.1rem;
         }
+
+        @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+            #rotate-overlay {
+                display: flex !important;
+            }
+        }
+
+        #rotate-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #e0e0e0;
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .rotate-icon {
+            font-size: 3rem;
+            animation: rotateAnim 2s infinite;
+        }
+
+        @keyframes rotateAnim {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(90deg);
+            }
+
+            100% {
+                transform: rotate(0deg);
+            }
+        }
     </style>
 </head>
 
 <body>
 
     <h1>ONLINE BIT FLIP</h1>
-    <p class="instructions">Tap a square to invert it and all <b>8 neighbors</b>.<br>Turn the whole grid <b>black</b> to
-        win!</p>
-
+    <p class="instructions">Flip all squares to <b>black</b>.<br>Tapping inverts a <b>3x3 area</b>.</p>
     <div id="grid"></div>
 
     <div class="stats-bar">
@@ -167,7 +207,7 @@
     <div id="start-modal" class="modal" style="display: flex;">
         <div class="modal-content">
             <h2>READY?</h2>
-            <p>Clear the grid as fast as possible.</p>
+            <p>Flip all squares to <b>black</b> as fast as possible.</p>
             <button class="btn" onclick="startGame()">START GAME</button>
         </div>
     </div>
@@ -178,6 +218,11 @@
             <p id="win-message"></p>
             <button class="btn" onclick="startGame()">PLAY AGAIN</button>
         </div>
+    </div>
+
+    <div id="rotate-overlay">
+        <div class="rotate-icon">🔄</div>
+        <p>Rotate your device to Portrait mode to play.</p>
     </div>
 
     <script>
