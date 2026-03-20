@@ -62,6 +62,7 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         .cell.black {
@@ -344,9 +345,15 @@
                     const cell = document.createElement('div');
                     cell.className = 'cell ' + (grid[r][c] === 1 ? 'black' : '');
 
-                    cell.onpointerdown = (e) => {
+                    cell.addEventListener('touchstart', (e) => { // touch screen
                         e.preventDefault();
                         toggle(r, c);
+                    }, { passive: false });
+
+                    cell.onmousedown = (e) => { // desktop
+                        if (e.pointerType === 'mouse' || !window.ontouchstart) {
+                            toggle(r, c);
+                        }
                     };
 
                     gridElement.appendChild(cell);
