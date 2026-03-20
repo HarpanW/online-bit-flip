@@ -51,6 +51,9 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.15s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
 
         .cell.black {
@@ -82,12 +85,23 @@
         }
 
         @keyframes popIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
-        .modal h2 { margin-top: 0; color: #111; font-size: 2rem; }
-        
+        .modal h2 {
+            margin-top: 0;
+            color: #111;
+            font-size: 2rem;
+        }
+
         .btn {
             background: #111;
             color: white;
@@ -100,7 +114,9 @@
             transition: transform 0.1s;
         }
 
-        .btn:active { transform: scale(0.95); }
+        .btn:active {
+            transform: scale(0.95);
+        }
 
         .stats-bar {
             margin-top: 30px;
@@ -112,7 +128,7 @@
             font-size: 0.85rem;
             color: #444;
             font-weight: bold;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .stat-item span {
@@ -127,7 +143,8 @@
 <body>
 
     <h1>ONLINE BIT FLIP</h1>
-    <p class="instructions">Tap a square to invert it and all <b>8 neighbors</b>.<br>Turn the whole grid <b>black</b> to win!</p>
+    <p class="instructions">Tap a square to invert it and all <b>8 neighbors</b>.<br>Turn the whole grid <b>black</b> to
+        win!</p>
 
     <div id="grid"></div>
 
@@ -158,7 +175,7 @@
         const gridElement = document.getElementById('grid');
         const winModal = document.getElementById('win-modal');
         const startModal = document.getElementById('start-modal');
-        
+
         const timerDisplay = document.getElementById('timer');
         const winCountDisplay = document.getElementById('win-count');
         const avgTimeDisplay = document.getElementById('avg-time');
@@ -167,7 +184,7 @@
         let grid = [];
         const size = 4;
 
-        let timerValue; 
+        let timerValue;
         let lastTick;
         let timerInterval;
         let gameActive = false;
@@ -190,7 +207,7 @@
                 lastTick = now;
 
                 timerValue += delta;
-                
+
                 timerDisplay.innerText = timerValue.toFixed(1) + 's';
             }, 50);
         }
@@ -203,11 +220,11 @@
         function startGame() {
             startModal.style.display = 'none';
             winModal.style.display = 'none';
-            
+
             gameActive = true;
             timerValue = -3.0;
             timerDisplay.innerText = "-3.0s";
-            
+
             initBoard();
             startTimer();
         }
@@ -278,7 +295,7 @@
 
             toggleEffect(r, c);
             render();
-            setTimeout(checkWin, 50);
+            checkWin();
         }
 
         function initBoard() {
@@ -303,7 +320,12 @@
                 for (let c = 0; c < size; c++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell ' + (grid[r][c] === 1 ? 'black' : '');
-                    cell.onclick = () => toggle(r, c);
+
+                    cell.onpointerdown = (e) => {
+                        e.preventDefault();
+                        toggle(r, c);
+                    };
+
                     gridElement.appendChild(cell);
                 }
             }
@@ -317,7 +339,7 @@
 
             gameActive = false;
             const finalTime = stopTimer();
-            
+
             let isNewPB = false;
             if (personalBest === null || finalTime < personalBest) {
                 personalBest = finalTime;
@@ -333,7 +355,7 @@
             winCountDisplay.innerText = totalWins;
             avgTimeDisplay.innerText = avgTime.toFixed(1) + 's';
             winMessage.innerText = `Finished in ${finalTime.toFixed(2)} seconds!`;
-            
+
             winModal.style.display = 'flex';
         }
 
